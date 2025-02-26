@@ -364,6 +364,15 @@ class IcmpHelperLibrary:
         def isValidResponse(self):
             return self.__isValidResponse
 
+        def isValidSequenceNum(self):
+            return self.__isValidSequenceNum
+
+        def isValidIcmpIdentifier(self):
+            return self.__isValidIcmpIdentifier
+
+        def isValidRawData(self):
+            return self.__isValidRawData
+
         # ############################################################################################################ #
         # IcmpPacket_EchoReply Setters                                                                                 #
         # ############################################################################################################ #
