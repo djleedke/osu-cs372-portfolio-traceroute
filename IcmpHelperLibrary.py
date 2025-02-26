@@ -170,21 +170,18 @@ class IcmpHelperLibrary:
 
             # Checking sequence number
             if icmpReplyPacket.getIcmpSequenceNumber() != self.getPacketSequenceNumber():
-                print(f'Invalid response sequence number, received {icmpReplyPacket.getIcmpSequenceNumber()} expected {self.getPacketSequenceNumber()}')
                 is_valid = False
             else:
                 icmpReplyPacket.setIsValidSequenceNum(True)
 
             # Checking packet identifier
             if icmpReplyPacket.getIcmpIdentifier() != self.getPacketIdentifier():
-                print(f'Invalid response packet identifier, received {icmpReplyPacket.getIcmpIdentifier()} expected {self.getPacketIdentifier()}')
                 is_valid = False
             else:
                 icmpReplyPacket.setIsValidIcmpIdentifier(True)
 
             # Checking raw data
             if icmpReplyPacket.getIcmpData() != self.getDataRaw():
-                print(f'Invalid response raw data, received {icmpReplyPacket.getIcmpData()} expected {self.getDataRaw()}')
                 is_valid = False
             else:
                 icmpReplyPacket.setIsValidRawData(True)
@@ -260,7 +257,7 @@ class IcmpHelperLibrary:
                     elif icmpType == 0:                         # Echo Reply
                         icmpReplyPacket = IcmpHelperLibrary.IcmpPacket_EchoReply(recvPacket)
                         self.__validateIcmpReplyPacketWithOriginalPingData(icmpReplyPacket)
-                        icmpReplyPacket.printResultToConsole(self.getTtl(), timeReceived, addr)
+                        icmpReplyPacket.printResultToConsole(self, self.getTtl(), timeReceived, addr)
                         return      # Echo reply is the end and therefore should return
 
                     else:
@@ -398,7 +395,7 @@ class IcmpHelperLibrary:
         # ############################################################################################################ #
         # IcmpPacket_EchoReply Public Functions                                                                        #
         # ############################################################################################################ #
-        def printResultToConsole(self, ttl, timeReceived, addr):
+        def printResultToConsole(self, sentPack, ttl, timeReceived, addr):
             bytes = struct.calcsize("d")
             timeSent = struct.unpack("d", self.__recvPacket[28:28 + bytes])[0]
             print("  TTL=%d    RTT=%.0f ms    Type=%d    Code=%d        Identifier=%d    Sequence Number=%d    %s" %
@@ -413,6 +410,18 @@ class IcmpHelperLibrary:
                   )
                  )
 
+            # Checking if valid, if not printing out the reasons why
+            if not self.isValidResponse():
+
+                if not self.isValidSequenceNum():
+                    print(f'  [Invalid Sequence Number]: Received: {self.getIcmpSequenceNumber()} Expected: {sentPack.getPacketSequenceNumber()}')
+
+                if not self.isValidIcmpIdentifier():
+                    print(f'  [Invalid Packet Identifier]: Received: {self.getIcmpIdentifier()} Expected:{sentPack.getPacketIdentifier()}')
+
+                if not self.isValidRawData():
+                    print(f'  [Invalid Raw Data]: Received: {self.getIcmpData()} Expected: {sentPack.getDataRaw()}')
+
     # ################################################################################################################ #
     # Class IcmpHelperLibrary                                                                                          #
     # ################################################################################################################ #
@@ -420,7 +429,7 @@ class IcmpHelperLibrary:
     # ################################################################################################################ #
     # IcmpHelperLibrary Class Scope Variables                                                                          #
     # ################################################################################################################ #
-    __DEBUG_IcmpHelperLibrary = True                  # Allows for debug output
+    __DEBUG_IcmpHelperLibrary = False                 # Allows for debug output
 
     # ################################################################################################################ #
     # IcmpHelperLibrary Private Functions                                                                              #
