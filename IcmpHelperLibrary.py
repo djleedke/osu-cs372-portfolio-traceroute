@@ -244,6 +244,7 @@ class IcmpHelperLibrary:
                                     addr[0]
                                 )
                               )
+                        print(f'[Type: {icmpType} Code: {icmpCode}]: {IcmpHelperLibrary.icmpCodes[icmpType][icmpCode]}')
                         IcmpHelperLibrary.recv_packets += 1
 
                     elif icmpType == 3:                         # Destination Unreachable
@@ -256,6 +257,8 @@ class IcmpHelperLibrary:
                                       addr[0]
                                   )
                               )
+
+                        print(f'[Type: {icmpType} Code: {icmpCode}]: {IcmpHelperLibrary.icmpCodes[icmpType][icmpCode]}')
                         IcmpHelperLibrary.recv_packets += 1
 
                     elif icmpType == 0:                         # Echo Reply
@@ -441,6 +444,32 @@ class IcmpHelperLibrary:
     roundTripTimes = []                             # List we are going to use to track the RTT to get min/max/avg
     sent_packets = 0                                # Used for packet loss tracking # of sent packets
     recv_packets = 0                                # Used for packet loss tracking # of received packets
+
+    # Reference: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
+    icmpCodes = {
+        3 : {
+            0 : 'Net Unreachable',
+            1 : 'Host Unreachable',
+            2 : 'Protocol Unreachable',
+            3 : 'Port Unreachable',
+            4 : 'Fragmentation Needed and Don\'t Fragment was Set',
+            5 : 'Source Route Failed',
+            6 : 'Destination Network Unknown',
+            7 : 'Destination Host Unknown',
+            8 : 'Source Host Isolated',
+            9 : 'Communication with Destination Network is Administratively Prohibited',
+            10 : 'Communication with Destination Host is Administratively Prohibited',
+            11 : 'Destination Network Unreachable for Type of Service',
+            12 : 'Destination Host Unreachable for Type of Service',
+            13 : 'Communication Administratively Prohibited',
+            14 : 'Host Precedence Violation',
+            15 : 'Precedence cutoff in effect'
+        },
+        11 : {
+            0 : 'Time to Live exceeded in Transit',
+            1 : 'Fragment Reassembly Time Exceeded'
+        }
+    }
 
     # ################################################################################################################ #
     # IcmpHelperLibrary Private Functions                                                                              #
