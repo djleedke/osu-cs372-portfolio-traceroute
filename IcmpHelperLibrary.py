@@ -213,6 +213,8 @@ class IcmpHelperLibrary:
             mySocket.setsockopt(IPPROTO_IP, IP_TTL, struct.pack('I', self.getTtl()))  # Unsigned int - 4 bytes
             try:
                 mySocket.sendto(b''.join([self.__header, self.__data]), (self.__destinationIpAddress, 0))
+                IcmpHelperLibrary.sent_packets += 1
+
                 timeLeft = 30
                 pingStartTime = time.time()
                 startedSelect = time.time()
@@ -242,6 +244,7 @@ class IcmpHelperLibrary:
                                     addr[0]
                                 )
                               )
+                        IcmpHelperLibrary.recv_packets += 1
 
                     elif icmpType == 3:                         # Destination Unreachable
                         print("  TTL=%d    RTT=%.0f ms    Type=%d    Code=%d    %s" %
@@ -253,11 +256,13 @@ class IcmpHelperLibrary:
                                       addr[0]
                                   )
                               )
+                        IcmpHelperLibrary.recv_packets += 1
 
                     elif icmpType == 0:                         # Echo Reply
                         icmpReplyPacket = IcmpHelperLibrary.IcmpPacket_EchoReply(recvPacket)
                         self.__validateIcmpReplyPacketWithOriginalPingData(icmpReplyPacket)
                         icmpReplyPacket.printResultToConsole(self, self.getTtl(), timeReceived, addr)
+                        IcmpHelperLibrary.recv_packets += 1
                         return      # Echo reply is the end and therefore should return
 
                     else:
@@ -432,8 +437,10 @@ class IcmpHelperLibrary:
     # ################################################################################################################ #
     # IcmpHelperLibrary Class Scope Variables                                                                          #
     # ################################################################################################################ #
-    __DEBUG_IcmpHelperLibrary = False                 # Allows for debug output
+    __DEBUG_IcmpHelperLibrary = False               # Allows for debug output
     roundTripTimes = []                             # List we are going to use to track the RTT to get min/max/avg
+    sent_packets = 0                                # Used for packet loss tracking # of sent packets
+    recv_packets = 0                                # Used for packet loss tracking # of received packets
 
     # ################################################################################################################ #
     # IcmpHelperLibrary Private Functions                                                                              #
@@ -459,13 +466,15 @@ class IcmpHelperLibrary:
             icmpPacket.printIcmpPacket_hex() if self.__DEBUG_IcmpHelperLibrary else 0
             # we should be confirming values are correct, such as identifier and sequence number and data
 
+        # Calculating and displaying RTT statistics
         min_rtt = round(min(IcmpHelperLibrary.roundTripTimes))
         max_rtt = round(max(IcmpHelperLibrary.roundTripTimes))
-
         # Reference: https://www.geeksforgeeks.org/find-average-list-python/
         avg_rtt = round(sum(IcmpHelperLibrary.roundTripTimes) / len(IcmpHelperLibrary.roundTripTimes))
+        
+        packet_loss = ((self.sent_packets - self.recv_packets) / self.sent_packets) * 100
 
-        print(f'Traceroute Complete - Min RTT:{min_rtt} ms, Max RTT: {max_rtt} ms, Avg RTT: {avg_rtt} ms')
+        print(f'Traceroute Complete - Min RTT:{min_rtt} ms, Max RTT: {max_rtt} ms, Avg RTT: {avg_rtt} ms, Packet Loss: {packet_loss} %')
 
     def __sendIcmpTraceRoute(self, host):
         print("sendIcmpTraceRoute Started...") if self.__DEBUG_IcmpHelperLibrary else 0
