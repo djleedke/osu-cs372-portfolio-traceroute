@@ -398,10 +398,13 @@ class IcmpHelperLibrary:
         def printResultToConsole(self, sentPack, ttl, timeReceived, addr):
             bytes = struct.calcsize("d")
             timeSent = struct.unpack("d", self.__recvPacket[28:28 + bytes])[0]
+            rtt = (timeReceived - timeSent) * 1000
+            IcmpHelperLibrary.roundTripTimes.append(rtt)    # Adding the round trip time to our list for tracking
+
             print("  TTL=%d    RTT=%.0f ms    Type=%d    Code=%d        Identifier=%d    Sequence Number=%d    %s" %
                   (
                       ttl,
-                      (timeReceived - timeSent) * 1000,
+                      rtt,
                       self.getIcmpType(),
                       self.getIcmpCode(),
                       self.getIcmpIdentifier(),
@@ -430,6 +433,7 @@ class IcmpHelperLibrary:
     # IcmpHelperLibrary Class Scope Variables                                                                          #
     # ################################################################################################################ #
     __DEBUG_IcmpHelperLibrary = False                 # Allows for debug output
+    roundTripTimes = []                             # List we are going to use to track the RTT to get min/max/avg
 
     # ################################################################################################################ #
     # IcmpHelperLibrary Private Functions                                                                              #
@@ -454,6 +458,14 @@ class IcmpHelperLibrary:
             icmpPacket.printIcmpPacketHeader_hex() if self.__DEBUG_IcmpHelperLibrary else 0
             icmpPacket.printIcmpPacket_hex() if self.__DEBUG_IcmpHelperLibrary else 0
             # we should be confirming values are correct, such as identifier and sequence number and data
+
+        min_rtt = round(min(IcmpHelperLibrary.roundTripTimes))
+        max_rtt = round(max(IcmpHelperLibrary.roundTripTimes))
+
+        # Reference: https://www.geeksforgeeks.org/find-average-list-python/
+        avg_rtt = round(sum(IcmpHelperLibrary.roundTripTimes) / len(IcmpHelperLibrary.roundTripTimes))
+
+        print(f'Traceroute Complete - Min RTT:{min_rtt} ms, Max RTT: {max_rtt} ms, Avg RTT: {avg_rtt} ms')
 
     def __sendIcmpTraceRoute(self, host):
         print("sendIcmpTraceRoute Started...") if self.__DEBUG_IcmpHelperLibrary else 0
