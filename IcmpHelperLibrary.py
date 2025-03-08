@@ -205,7 +205,8 @@ class IcmpHelperLibrary:
             if len(self.__icmpTarget.strip()) <= 0 | len(self.__destinationIpAddress.strip()) <= 0:
                 self.setIcmpTarget("127.0.0.1")
 
-            print("Pinging (" + self.__icmpTarget + ") " + self.__destinationIpAddress)
+            ping_msg = "Pinging (" + self.__icmpTarget + ") " + self.__destinationIpAddress
+            print(ping_msg, end=" ")
 
             mySocket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)
             mySocket.settimeout(self.__ipTimeout)
@@ -223,13 +224,13 @@ class IcmpHelperLibrary:
                 endSelect = time.time()
                 howLongInSelect = (endSelect - startedSelect)
                 if whatReady[0] == []:  # Timeout
-                    print("  *        *        *        *        *    Request timed out.")
+                    print("  *        *        *        *        *      Request timed out.")
                 recvPacket, addr = mySocket.recvfrom(1024)  # recvPacket - bytes object representing data received
                 # addr  - address of socket sending data
                 timeReceived = time.time()
                 timeLeft = timeLeft - howLongInSelect
                 if timeLeft <= 0:
-                    print("  *        *        *        *        *    Request timed out (By no remaining time left).")
+                    print("  *        *        *        *        *      Request timed out (By no remaining time left).")
 
                 else:
                     # Fetch the ICMP type and code from the received packet
@@ -244,8 +245,8 @@ class IcmpHelperLibrary:
                                     icmpCode,
                                     addr[0]
                                 )
-                              )
-                        print(f'  [Type: {icmpType} Code: {icmpCode}]: {IcmpHelperLibrary.icmpCodes[icmpType][icmpCode]}')
+                              , end=" ")
+                        print(f' {IcmpHelperLibrary.icmpCodes[icmpType][icmpCode]}')
                         IcmpHelperLibrary.recv_packets += 1
 
                     elif icmpType == 3:                         # Destination Unreachable
@@ -257,9 +258,9 @@ class IcmpHelperLibrary:
                                       icmpCode,
                                       addr[0]
                                   )
-                              )
+                              , end=" '")
 
-                        print(f'  [Type: {icmpType} Code: {icmpCode}]: {IcmpHelperLibrary.icmpCodes[icmpType][icmpCode]}')
+                        print(f' {IcmpHelperLibrary.icmpCodes[icmpType][icmpCode]}')
                         IcmpHelperLibrary.recv_packets += 1
 
                     elif icmpType == 0:                         # Echo Reply
@@ -272,7 +273,8 @@ class IcmpHelperLibrary:
                     else:
                         print("error")
             except timeout:
-                print("  *        *        *        *        *    Request timed out (By Exception).")
+                print(" " * len(ping_msg), end=" ")
+                print("  *        *        *        *        *      Request timed out (By Exception).")
             finally:
                 mySocket.close()
 
@@ -497,10 +499,10 @@ class IcmpHelperLibrary:
             # we should be confirming values are correct, such as identifier and sequence number and data
 
         # Calculating and displaying RTT statistics
-        min_rtt = round(min(IcmpHelperLibrary.roundTripTimes))
-        max_rtt = round(max(IcmpHelperLibrary.roundTripTimes))
+        min_rtt = round(min(IcmpHelperLibrary.roundTripTimes)) if IcmpHelperLibrary.roundTripTimes else 0
+        max_rtt = round(max(IcmpHelperLibrary.roundTripTimes)) if IcmpHelperLibrary.roundTripTimes else 0
         # Reference: https://www.geeksforgeeks.org/find-average-list-python/
-        avg_rtt = round(sum(IcmpHelperLibrary.roundTripTimes) / len(IcmpHelperLibrary.roundTripTimes))
+        avg_rtt = round(sum(IcmpHelperLibrary.roundTripTimes) / len(IcmpHelperLibrary.roundTripTimes)) if IcmpHelperLibrary.roundTripTimes else 0
         
         packet_loss = ((self.sent_packets - self.recv_packets) / self.sent_packets) * 100
 
@@ -549,14 +551,26 @@ class IcmpHelperLibrary:
 def main():
     icmpHelperPing = IcmpHelperLibrary()
 
-
+    
     # Choose one of the following by uncommenting out the line
-    # icmpHelperPing.sendPing("209.233.126.254")
+    # Google
     # icmpHelperPing.sendPing("www.google.com")
-    # icmpHelperPing.sendPing("gaia.cs.umass.edu")
-    icmpHelperPing.traceRoute("164.151.129.20")
-    # icmpHelperPing.traceRoute("122.56.99.243")
+    # icmpHelperPing.traceRoute("www.google.com") 
 
+    # UMass Amherst
+    # icmpHelperPing.sendPing("gaia.cs.umass.edu")
+    # icmpHelperPing.traceRoute("gaia.cs.umass.edu")        
+    
+    # This site was referenced to find and test international addresses: https://myip.ms/
+
+    # Proton (Switzerland IP) 185.70.42.21
+    #icmpHelperPing.sendPing("www.proton.ch")
+    #icmpHelperPing.traceRoute("www.proton.ch")
+
+    # Sakura Internet (Japan)
+    icmpHelperPing.sendPing("www.sakura.ne.jp")
+    #icmpHelperPing.traceRoute("www.sakura.ne.jp")
+    
 
 if __name__ == "__main__":
     main()
